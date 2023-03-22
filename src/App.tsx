@@ -8,7 +8,9 @@ import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { Grid } from '@mui/material';
 
 export default function App() {
-  const { currencyList } = useAppSelector((state) => state.currencyReducer);
+  const { currencyList, isLoading } = useAppSelector(
+    (state) => state.currencyReducer
+  );
   const dispatch = useAppDispatch();
 
   const [firstCurrency, setFirstCurrency] = useState('');
@@ -25,43 +27,48 @@ export default function App() {
   useEffect(() => {
     dispatch(fetchCurrency());
   }, []);
+
   return (
     <>
-      <Grid container spacing={2}>
-        <Grid xs={4}>
-          <FormControl fullWidth>
-            <InputLabel id="demo-simple-select-label">Currency</InputLabel>
-            <Select
-              value={firstCurrency}
-              label="Currency"
-              onChange={firstCurrencyHandle}
-            >
-              {currencyList?.map((el) => (
-                <MenuItem value={el.name}>
-                  <p>{el.fullName}</p>
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
+      {isLoading ? (
+        <p>тут будет лоадер...</p>
+      ) : (
+        <Grid container spacing={2}>
+          <Grid xs={4}>
+            <FormControl fullWidth>
+              <InputLabel id="demo-simple-select-label">Currency</InputLabel>
+              <Select
+                value={firstCurrency}
+                label="Currency"
+                onChange={firstCurrencyHandle}
+              >
+                {currencyList?.map((el) => (
+                  <MenuItem value={el.name}>
+                    <p>{el.fullName}</p>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
 
-        <Grid xs={4}>
-          <FormControl fullWidth>
-            <InputLabel id="demo-simple-select-label">Currency</InputLabel>
-            <Select
-              value={secondCurrency}
-              label="Currency"
-              onChange={secondCurrencyHandle}
-            >
-              {currencyList?.map((el) => (
-                <MenuItem value={el.name}>
-                  <p>{el.fullName}</p>
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Grid xs={4}>
+            <FormControl fullWidth>
+              <InputLabel id="demo-simple-select-label">Currency</InputLabel>
+              <Select
+                value={secondCurrency}
+                label="Currency"
+                onChange={secondCurrencyHandle}
+              >
+                {currencyList?.map((el) => (
+                  <MenuItem value={el.name}>
+                    <p>{el.fullName}</p>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
         </Grid>
-      </Grid>
+      )}
     </>
   );
 }
