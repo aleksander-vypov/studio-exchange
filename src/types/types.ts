@@ -1,5 +1,5 @@
 export interface ICurrencyList {
-  currency: []
+  currency: [];
 }
 
 export interface ICurrency {
@@ -11,4 +11,16 @@ export interface IExchangeState {
   currencyList: ICurrency[];
   isLoading: boolean;
   error: string;
+  currentConvert: {
+    amount: string;
+    from: string;
+    to: string;
+    result: string;
+  };
+}
+
+export interface IFromTo {
+  from: string;
+  to: string;
+  amount: string;
 }

@@ -1,73 +1,132 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from './hooks/redux';
-import { fetchCurrency } from './store/reducers/actionCreator';
-import InputLabel from '@mui/material/InputLabel';
+import { fetchCurrency, fetchConvert } from './store/reducers/actionCreator';
 import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
-import { Grid } from '@mui/material';
+import { SelectChangeEvent } from '@mui/material/Select';
+import SelectCurrency from './components/SelectCurrency';
+import Input from './components/Input';
+import styles from './App.module.scss';
+import { IFromTo } from './types/types';
+import ImportExportIcon from '@mui/icons-material/ImportExport';
+import IconButton from '@mui/material/IconButton';
+import { Button } from '@mui/material';
 
 export default function App() {
-  const { currencyList, isLoading } = useAppSelector(
-    (state) => state.currencyReducer
-  );
+  const {
+    currencyList,
+    isLoading,
+    currentConvert: { amount, from, to, result },
+  } = useAppSelector((state) => state.currencyReducer);
+
   const dispatch = useAppDispatch();
 
-  const [firstCurrency, setFirstCurrency] = useState('');
-  const [secondCurrency, setSecondCurrency] = useState('');
+  const [firstCurrency, setFirstCurrency] = useState<string>('');
+  const [secondCurrency, setSecondCurrency] = useState<string>('');
+  const [firstValue, setFirstValue] = useState<string>('');
+  const [secondValue, setSecondValue] = useState<string>('');
+  const [convertParams, setParams] = useState<IFromTo | undefined>();
 
-  const firstCurrencyHandle = (event: SelectChangeEvent) => {
-    setFirstCurrency(event.target.value as string);
+  const firstCurrencyHandle = useCallback((event: SelectChangeEvent) => {
+    setFirstCurrency(event.target.value);
+  }, []);
+
+  const inputResult = () => {
+    if (amount === firstValue) {
+      setSecondValue(result);
+    } else {
+      setFirstValue(result);
+    }
   };
 
-  const secondCurrencyHandle = (event: SelectChangeEvent) => {
-    setSecondCurrency(event.target.value as string);
+  const firstCurrencyChange = useCallback((value: string) => {
+    setParams({
+      from: firstCurrency,
+      to: secondCurrency,
+      amount: value,
+    });
+    setFirstValue(value);
+  }, []);
+
+  const secondCurrencyHandle = useCallback((event: SelectChangeEvent) => {
+    setSecondCurrency(event.target.value);
+  }, []);
+
+  const secondCurrencyChange = useCallback((value: string) => {
+    setParams({
+      from: secondCurrency,
+      to: firstCurrency,
+      amount: value,
+    });
+    setSecondValue(value);
+  }, []);
+
+  const exchange = () => {
+    if (convertParams) {
+      dispatch(fetchConvert(convertParams));
+    }
   };
 
   useEffect(() => {
-    dispatch(fetchCurrency());
-  }, []);
+    if (result) {
+      inputResult();
+    }
+  }, [result]);
+
+  // useEffect(() => {
+  //   dispatch(fetchCurrency());
+  // }, []);
 
   return (
     <>
       {isLoading ? (
         <p>тут будет лоадер...</p>
       ) : (
-        <Grid container spacing={2}>
-          <Grid xs={4}>
-            <FormControl fullWidth>
-              <InputLabel id="demo-simple-select-label">Currency</InputLabel>
-              <Select
-                value={firstCurrency}
-                label="Currency"
+        <>
+          <div className={styles.container}>
+            <div className={styles.inputs}>
+              <SelectCurrency
                 onChange={firstCurrencyHandle}
+                currenyValue={firstCurrency}
               >
                 {currencyList?.map((el) => (
-                  <MenuItem value={el.name}>
-                    <p>{el.fullName}</p>
+                  <MenuItem key={el.name} value={el.name}>
+                    <strong>{`${el.name} `}</strong>
+                    <span />
+                    {el.fullName}
                   </MenuItem>
                 ))}
-              </Select>
-            </FormControl>
-          </Grid>
+              </SelectCurrency>
 
-          <Grid xs={4}>
-            <FormControl fullWidth>
-              <InputLabel id="demo-simple-select-label">Currency</InputLabel>
-              <Select
-                value={secondCurrency}
-                label="Currency"
+              <Input onChange={firstCurrencyChange} value={firstValue} />
+            </div>
+
+            <IconButton className={styles.iconButton}>
+              <ImportExportIcon />
+            </IconButton>
+
+            <div className={styles.inputs}>
+              <SelectCurrency
                 onChange={secondCurrencyHandle}
+                currenyValue={secondCurrency}
               >
                 {currencyList?.map((el) => (
-                  <MenuItem value={el.name}>
-                    <p>{el.fullName}</p>
+                  <MenuItem key={el.name} value={el.name}>
+                    <strong>{`${el.name} `}</strong>
+                    <span />
+                    {el.fullName}
                   </MenuItem>
                 ))}
-              </Select>
-            </FormControl>
-          </Grid>
-        </Grid>
+              </SelectCurrency>
+
+              <Input onChange={secondCurrencyChange} value={secondValue} />
+            </div>
+          </div>
+          <div className={styles.btn}>
+            <Button variant="outlined" onClick={exchange}>
+              EXCHANGE
+            </Button>
+          </div>
+        </>
       )}
     </>
   );
