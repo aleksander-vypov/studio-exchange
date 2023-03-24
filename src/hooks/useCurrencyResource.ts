@@ -4,6 +4,12 @@ interface IRequest {
   headers: Headers;
 }
 
+import { ICurrentConvert } from '../types/types';
+
+interface ICurrencyFromApi {
+  symbols: Record<string, string>;
+}
+
 function useCurrencyResource() {
   const myHeaders = new Headers();
   myHeaders.append('apikey', 'd1dNtL3TtyGt78VnwoEw3anb4XITkE0R');
@@ -14,7 +20,7 @@ function useCurrencyResource() {
     headers: myHeaders,
   };
 
-  const getCurrency = async () => {
+  const getCurrency = async (): Promise<ICurrencyFromApi> => {
     return fetch(
       'https://api.apilayer.com/exchangerates_data/symbols',
       requestOptions
@@ -23,13 +29,19 @@ function useCurrencyResource() {
       .catch((error) => console.log('error', error));
   };
 
-  const getConvert = async (to: string, from: string, amount: string) => {
+  const getConvert = async (
+    to: string,
+    from: string,
+    amount: string
+  ): Promise<ICurrentConvert | void> => {
     return fetch(
       `https://api.apilayer.com/exchangerates_data/convert?to=${to}&from=${from}&amount=${amount}`,
       requestOptions
     )
       .then((response) => response.json())
-      .then((data) => ({ ...data.query, result: data.result }))
+      .then((data) => {
+        return { ...data.query, result: data.result };
+      })
       .catch((error) => console.log('error', error));
   };
 

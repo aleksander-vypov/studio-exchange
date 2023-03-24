@@ -10,12 +10,14 @@ import { IFromTo } from './types/types';
 import ImportExportIcon from '@mui/icons-material/ImportExport';
 import IconButton from '@mui/material/IconButton';
 import { Button } from '@mui/material';
+import Loader from './components/Loader';
 
 export default function App() {
   const {
     currencyList,
     isLoading,
-    currentConvert: { amount, from, to, result },
+    currentConvert: { amount, result },
+    exchangeHistory,
   } = useAppSelector((state) => state.currencyReducer);
 
   const dispatch = useAppDispatch();
@@ -24,41 +26,65 @@ export default function App() {
   const [secondCurrency, setSecondCurrency] = useState<string>('');
   const [firstValue, setFirstValue] = useState<string>('');
   const [secondValue, setSecondValue] = useState<string>('');
-  const [convertParams, setParams] = useState<IFromTo | undefined>();
-
-  const firstCurrencyHandle = useCallback((event: SelectChangeEvent) => {
-    setFirstCurrency(event.target.value);
-  }, []);
+  const [convertParams, setParams] = useState<IFromTo>({});
 
   const inputResult = () => {
-    if (amount === firstValue) {
+    if (String(amount) === firstValue) {
       setSecondValue(result);
     } else {
       setFirstValue(result);
     }
   };
 
-  const firstCurrencyChange = useCallback((value: string) => {
-    setParams({
-      from: firstCurrency,
-      to: secondCurrency,
-      amount: value,
-    });
-    setFirstValue(value);
-  }, []);
+  const firstCurrencyHandle = useCallback(
+    (event: SelectChangeEvent) => {
+      setFirstCurrency(event.target.value);
+      setParams((params) => ({
+        ...params,
+        from: event.target.value,
+        to: secondCurrency,
+      }));
+    },
+    [secondCurrency, firstCurrency]
+  );
 
-  const secondCurrencyHandle = useCallback((event: SelectChangeEvent) => {
-    setSecondCurrency(event.target.value);
-  }, []);
+  const firstCurrencyChange = useCallback(
+    (value: string) => {
+      const params = {
+        from: value ? firstCurrency : secondCurrency,
+        to: value ? secondCurrency : firstCurrency,
+        amount: value ? value : secondValue,
+      };
+      setParams(params);
+      setFirstValue(value);
+    },
+    [secondCurrency, firstCurrency, secondValue]
+  );
 
-  const secondCurrencyChange = useCallback((value: string) => {
-    setParams({
-      from: secondCurrency,
-      to: firstCurrency,
-      amount: value,
-    });
-    setSecondValue(value);
-  }, []);
+  const secondCurrencyHandle = useCallback(
+    (event: SelectChangeEvent) => {
+      setSecondCurrency(event.target.value);
+      setParams((params) => ({
+        ...params,
+        from: event.target.value,
+        to: firstCurrency,
+      }));
+    },
+    [secondCurrency, firstCurrency]
+  );
+
+  const secondCurrencyChange = useCallback(
+    (value: string) => {
+      const params = {
+        from: value ? secondCurrency : firstCurrency,
+        to: value ? firstCurrency : secondCurrency,
+        amount: value ? value : firstValue,
+      };
+      setParams(params);
+      setSecondValue(value);
+    },
+    [secondCurrency, firstCurrency, firstValue]
+  );
 
   const exchange = () => {
     if (convertParams) {
@@ -72,14 +98,16 @@ export default function App() {
     }
   }, [result]);
 
-  // useEffect(() => {
-  //   dispatch(fetchCurrency());
-  // }, []);
+  useEffect(() => {
+    dispatch(fetchCurrency());
+  }, []);
+
+  console.log(convertParams);
 
   return (
     <>
       {isLoading ? (
-        <p>тут будет лоадер...</p>
+        <Loader />
       ) : (
         <>
           <div className={styles.container}>
@@ -91,13 +119,17 @@ export default function App() {
                 {currencyList?.map((el) => (
                   <MenuItem key={el.name} value={el.name}>
                     <strong>{`${el.name} `}</strong>
-                    <span />
+                    {`\u2009`}
                     {el.fullName}
                   </MenuItem>
                 ))}
               </SelectCurrency>
 
-              <Input onChange={firstCurrencyChange} value={firstValue} />
+              <Input
+                disabled={!firstCurrency}
+                onChange={firstCurrencyChange}
+                value={firstValue}
+              />
             </div>
 
             <IconButton className={styles.iconButton}>
@@ -112,20 +144,47 @@ export default function App() {
                 {currencyList?.map((el) => (
                   <MenuItem key={el.name} value={el.name}>
                     <strong>{`${el.name} `}</strong>
-                    <span />
+                    {`\u2009`}
                     {el.fullName}
                   </MenuItem>
                 ))}
               </SelectCurrency>
 
-              <Input onChange={secondCurrencyChange} value={secondValue} />
+              <Input
+                disabled={!secondCurrency}
+                onChange={secondCurrencyChange}
+                value={secondValue}
+              />
             </div>
           </div>
           <div className={styles.btn}>
-            <Button variant="outlined" onClick={exchange}>
-              EXCHANGE
+            <Button
+              disabled={
+                !Boolean(
+                  (firstValue || secondValue) &&
+                    convertParams.from &&
+                    convertParams.to
+                )
+              }
+              variant="outlined"
+              onClick={exchange}
+            >
+              {convertParams.from && convertParams.to
+                ? `EXCHANGE FROM ${convertParams.from} TO ${convertParams.to}`
+                : 'EXCHANGE'}
             </Button>
           </div>
+          {!!exchangeHistory.length && (
+            <div className={styles.history}>
+              <ul>
+                {exchangeHistory.map((el, i) => (
+                  <li
+                    key={i}
+                  >{`${el.amount} from ${el.from} to ${el.to}: ${el.result}`}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </>
       )}
     </>

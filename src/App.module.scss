@@ -1,21 +1,37 @@
+@mixin respond-to() {
+  @media (max-width: 768px) {
+    @content;
+  }
+}
+
 .container {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 1em;
   margin-top: 20%;
+  @include respond-to() {
+    flex-direction: column;
+  }
 }
 
 .inputs {
   display: flex;
   flex-direction: column;
-  width: 35%;
+  width: 20%;
   gap: 1em;
+
+  @include respond-to() {
+    width: 100%;
+  }
 }
 
 .iconButton {
   height: 45px;
   transform: rotate(90deg);
+  @include respond-to() {
+    transform: rotate(0deg);
+  }
 }
 
 .btn {
@@ -24,6 +40,28 @@
   margin-top: 1em;
 }
 
-span {
-  width: 1em;
+.history {
+  display: flex;
+  justify-content: center;
+}
+
+ul {
+  border: 1px solid #1976d2;
+  border-radius: 4px;
+  list-style-type: none;
+  padding: 10px;
+  width: 45%;
+  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+
+  @include respond-to() {
+    width: 100%;
+  }
+}
+
+.loader {
+  display: flex;
+  justify-content: center;
+  height: 98vh;
+  width: 98vw;
+  align-items: center;
 }

@@ -6,7 +6,7 @@ import { IFromTo } from '../../types/types';
 
 export const fetchCurrency = () => async (dispatch: AppDispatch) => {
   try {
-    dispatch(currencySlice.actions.currencyFetching());
+    dispatch(currencySlice.actions.fetching());
 
     const { getCurrency } = useCurrencyResource();
 
@@ -18,7 +18,7 @@ export const fetchCurrency = () => async (dispatch: AppDispatch) => {
       )
     );
   } catch (e: any) {
-    dispatch(currencySlice.actions.currencyFetchingError(e?.message));
+    dispatch(currencySlice.actions.fetchingError(e?.message));
   }
 };
 
@@ -26,20 +26,20 @@ export const fetchConvert =
   ({ to, from, amount }: IFromTo) =>
   async (dispatch: AppDispatch) => {
     try {
-      
-      dispatch(currencySlice.actions.convertFetching());
+      dispatch(currencySlice.actions.fetching());
 
       const { getConvert } = useCurrencyResource();
 
       const response = await getConvert(to, from, amount);
-      
-      dispatch(
-        currencySlice.actions.convertFetchingSuccess({
-          ...response.query,
-          result: response.result,
-        })
-      );
+
+      if (response) {
+        dispatch(
+          currencySlice.actions.convertFetchingSuccess({
+            ...response,
+          })
+        );
+      }
     } catch (e: any) {
-      dispatch(currencySlice.actions.convertFetchingError(e?.message));
+      dispatch(currencySlice.actions.fetchingError(e?.message));
     }
   };
